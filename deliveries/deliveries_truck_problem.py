@@ -6,7 +6,6 @@ from .map_problem import MapProblem, MapState
 from .cached_map_distance_finder import CachedMapDistanceFinder
 from .deliveries_truck_problem_input import *
 
-
 __all__ = ['DeliveriesTruckState', 'DeliveryCost', 'DeliveriesTruckProblem', 'TruckDeliveriesInnerMapProblemHeuristic']
 
 
@@ -51,12 +50,11 @@ class DeliveriesTruckState(GraphProblemState):
         """
         assert isinstance(other, DeliveriesTruckState)
 
-        # TODO [Ex.15]: Complete the implementation of this method!
-        #  Note that you can simply compare two instances of `Junction` type
-        #   (using equals `==` operator) because the class `Junction` explicitly
-        #   implements the `__eq__()` method. The types `frozenset` and `Delivery`
-        #   are also comparable (in the same manner).
-        raise NotImplementedError()  # TODO: remove this line.
+        # DONE [Ex.15]
+        # Compare them just field-by-field
+        return (self.loaded_deliveries == other.loaded_deliveries
+                and self.dropped_deliveries == other.dropped_deliveries
+                and self.current_location == other.current_location)
 
     def __hash__(self):
         """
@@ -70,13 +68,9 @@ class DeliveriesTruckState(GraphProblemState):
     def get_total_nr_packages_loaded(self) -> int:
         """
         This method returns the total number of packages that are loaded on the truck in this state.
-        TODO [Ex.15]: Implement this method.
-         Notice that this method can be implemented using a single line of code - do so!
-         Use python's built-it `sum()` function.
-         Notice that `sum()` can receive an *ITERATOR* as argument; That is, you can simply write something like this:
-        >>> sum(<some expression using item> for item in some_collection_of_items)
         """
-        raise NotImplementedError()  # TODO: remove this line.
+        # DONE [Ex.15]
+        return sum(item.nr_packages for item in self.loaded_deliveries)
 
 
 @dataclass(frozen=True)
@@ -156,7 +150,7 @@ class DeliveriesTruckProblem(GraphProblem):
 
     def expand_state_with_costs(self, state_to_expand: GraphProblemState) -> Iterator[OperatorResult]:
         """
-        TODO [Ex.15]: Implement this method!
+        DONE [Ex.15]
         This method represents the `Succ: S -> P(S)` function of the deliveries truck problem.
         The `Succ` function is defined by the problem operators as shown in class.
         The deliveries truck problem operators are defined in the assignment instructions.
@@ -183,15 +177,53 @@ class DeliveriesTruckProblem(GraphProblem):
         """
 
         assert isinstance(state_to_expand, DeliveriesTruckState)
-        raise NotImplementedError()  # TODO: remove this line!
+
+        waiting_to_pick = self.get_deliveries_waiting_to_pick(state_to_expand)
+        can_be_picked = [delivery for delivery in waiting_to_pick
+                         if delivery.nr_packages + state_to_expand.get_total_nr_packages_loaded()
+                         <= self.problem_input.delivery_truck.max_nr_loaded_packages]
+
+        # Attempt to pick a delivery
+        for delivery_to_pick in can_be_picked:
+            # Add new delivery to loaded, dropped stays the same
+            new_loaded = set(state_to_expand.loaded_deliveries)
+            new_loaded.add(delivery_to_pick)
+
+            new_state = DeliveriesTruckState(loaded_deliveries=frozenset(new_loaded),
+                                             dropped_deliveries=state_to_expand.dropped_deliveries,
+                                             current_location=delivery_to_pick.pick_location)
+            cost = self.map_distance_finder.get_map_cost_between(state_to_expand.current_location,
+                                                                 delivery_to_pick.pick_location)
+            name = 'pick ' + delivery_to_pick.client_name
+
+            yield OperatorResult(successor_state=new_state, operator_cost=cost, operator_name=name)
+
+        # Attempt to drop a delivery
+        loaded = set(state_to_expand.loaded_deliveries)
+        for delivery_to_drop in loaded:
+            # Drop delivery from loaded
+            new_loaded = set(state_to_expand.loaded_deliveries)
+            new_loaded.remove(delivery_to_drop)
+            # Add it to dropped
+            new_dropped = set(state_to_expand.dropped_deliveries)
+            new_dropped.add(delivery_to_drop)
+
+            new_state = DeliveriesTruckState(loaded_deliveries=frozenset(new_loaded),
+                                             dropped_deliveries=frozenset(new_dropped),
+                                             current_location=delivery_to_drop.drop_location)
+            cost = self.map_distance_finder.get_map_cost_between(state_to_expand.current_location,
+                                                                 delivery_to_drop.drop_location)
+            name = 'drop ' + delivery_to_drop.client_name
+
+            yield OperatorResult(successor_state=new_state, operator_cost=cost, operator_name=name)
 
     def is_goal(self, state: GraphProblemState) -> bool:
         """
         This method receives a state and returns whether this state is a goal.
-        TODO [Ex.15]: implement this method!
+        DONE [Ex.15]
         """
         assert isinstance(state, DeliveriesTruckState)
-        raise NotImplementedError()  # TODO: remove the line!
+        return len(state.dropped_deliveries) == len(self.problem_input.deliveries)
 
     def _calc_map_road_cost(self, link: Link) -> DeliveryCost:
         """
@@ -247,14 +279,9 @@ class DeliveriesTruckProblem(GraphProblem):
     def get_deliveries_waiting_to_pick(self, state: DeliveriesTruckState) -> Set[Delivery]:
         """
         This method returns a set of all deliveries that haven't been neither picked nor dropped yet.
-        TODO [Ex.15]: Implement this method.
-            Use `set` difference operations.
-            Note: Given a collection of items, you can create a new set of these items simply by
-                `set(my_collection_of_items)`. Then you can use set operations over this newly
-                generated set.
-            Note: This method can be implemented using a single line of code.
+        DONE [Ex.15]
         """
-        raise NotImplementedError()  # TODO: remove this line!
+        return set(self.problem_input.deliveries) - (set(state.dropped_deliveries) & set(state.loaded_deliveries))
 
     def get_all_junctions_in_remaining_truck_path(self, state: DeliveriesTruckState) -> Set[Junction]:
         """

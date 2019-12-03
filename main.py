@@ -26,7 +26,7 @@ def plot_distance_and_expanded_wrt_weight_figure(
     """
     Use `matplotlib` to generate a figure of the distance & #expanded-nodes
      w.r.t. the weight.
-    TODO [Ex.14]: Complete the implementation of this method.
+    DONE [Ex.14]
     """
     weights, total_cost, total_nr_expanded = np.array(weights), np.array(total_cost), np.array(total_nr_expanded)
     assert len(weights) == len(total_cost) == len(total_nr_expanded)
@@ -100,7 +100,7 @@ def toy_map_problem_experiments():
     print(res)
 
     # Ex.14
-    # TODO:
+    # DONE:
     #  1. Complete the implementation of the function
     #     `run_astar_for_weights_in_range()` (upper in this file).
     #  2. Complete the implementation of the function
@@ -141,9 +141,11 @@ def basic_deliveries_truck_problem_experiments():
     small_delivery_problem_with_distance_cost = get_deliveries_problem('small', OptimizationObjective.Distance)
 
     # Ex.16
-    # TODO: create an instance of `UniformCost`, solve the `small_delivery_problem_with_distance_cost`
+    # DONE: create an instance of `UniformCost`, solve the `small_delivery_problem_with_distance_cost`
     #       with it and print the results.
-    exit()  # TODO: remove!
+    uc = UniformCost()
+    res = uc.solve_problem(small_delivery_problem_with_distance_cost)
+    print(res)
 
 
 def deliveries_truck_problem_with_astar_experiments():
