@@ -42,13 +42,10 @@ class AStar(BestFirstSearch):
          whenever just after creating a new successor node.
         Should calculate and return the f-score of the given node.
         This score is used as a priority of this node in the open priority queue.
-
-        TODO [Ex.11]: implement this method.
-        Remember: In Weighted-A* the f-score is defined by ((1-w) * cost) + (w * h(state)).
-        Notice: You may use `search_node.g_cost`, `self.heuristic_weight`, and `self.heuristic_function`.
         """
 
-        raise NotImplementedError()  # TODO: remove this line!
+        return (1 - self.heuristic_weight) * search_node.g_cost + \
+            self.heuristic_weight * self.heuristic_function.estimate(search_node.state)
 
     def _open_successor_node(self, problem: GraphProblem, successor_node: SearchNode):
         """
@@ -68,4 +65,17 @@ class AStar(BestFirstSearch):
                   but still could be improved.
         """
 
-        raise NotImplementedError()  # TODO: remove this line!
+        if self.open.has_state(successor_node.state):
+            already_found_node_with_same_state = self.open.get_node_by_state(successor_node.state)
+            if already_found_node_with_same_state.expanding_priority > successor_node.expanding_priority:
+                self.open.extract_node(already_found_node_with_same_state)
+                self.open.push_node(successor_node)
+
+        elif self.close.has_state(successor_node.state):
+            closed_node = self.close.get_node_by_state(successor_node.state)
+            if closed_node.expanding_priority > successor_node.expanding_priority:
+                self.close.remove_node(closed_node)
+                self.open.push_node(successor_node)
+
+        else:
+            self.open.push_node(successor_node)
