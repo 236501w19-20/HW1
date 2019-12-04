@@ -25,7 +25,7 @@ class TruckDeliveriesMaxAirDistHeuristic(HeuristicFunction):
          by calculating the maximum distance within the group of air distances between each
          two junctions in the remaining truck path.
 
-        TODO [Ex.17]:
+        DONE [Ex.17]:
             Calculate the `total_distance_lower_bound` by taking the maximum over the group
                 {airDistanceBetween(j1,j2) | j1,j2 in JunctionsInRemainingTruckPath s.t. j1 != j2}
             Use the method `get_all_junctions_in_remaining_truck_path()` of the deliveries problem.
@@ -47,7 +47,10 @@ class TruckDeliveriesMaxAirDistHeuristic(HeuristicFunction):
         if len(all_junctions_in_remaining_truck_path) < 2:
             return 0
 
-        total_distance_lower_bound = 10  # TODO: modify this line.
+        total_distance_lower_bound = max(self.cached_air_distance_calculator.get_air_distance_between_junctions(junction1, junction2)
+                                         for junction1 in all_junctions_in_remaining_truck_path
+                                         for junction2 in all_junctions_in_remaining_truck_path
+                                         if junction1.index < junction2.index)
 
         return self.problem.get_cost_lower_bound_from_distance_lower_bound(total_distance_lower_bound)
 
@@ -82,7 +85,19 @@ class TruckDeliveriesSumAirDistHeuristic(HeuristicFunction):
         if len(all_junctions_in_remaining_truck_path) < 2:
             return 0
 
-        total_cost_of_greedily_built_path = 10  # TODO: modify this line and complete the missing implementation here.
+        current_junction = state.current_location
+        sum_of_distances = 0
+        all_junctions_in_remaining_truck_path.remove(current_junction)
+
+        while all_junctions_in_remaining_truck_path:
+            distances_and_junctions = [(self.cached_air_distance_calculator.get_air_distance_between_junctions(current_junction, junction), junction)
+                                       for junction in all_junctions_in_remaining_truck_path]
+            minimal_distance, closest_junction = min(distances_and_junctions)
+            sum_of_distances += minimal_distance
+            all_junctions_in_remaining_truck_path.remove(closest_junction)
+            current_junction = closest_junction
+
+        total_cost_of_greedily_built_path = sum_of_distances
 
         return self.problem.get_cost_lower_bound_from_distance_lower_bound(total_cost_of_greedily_built_path)
 
@@ -121,4 +136,20 @@ class TruckDeliveriesMSTAirDistHeuristic(HeuristicFunction):
                to calculate the air distance between the two junctions.
               Google for how to use `networkx` package for this purpose.
         """
-        raise NotImplementedError()  # TODO: remove this line!
+
+        graph = nx.Graph()
+
+        # adding nodes
+        graph.add_nodes_from([junction.index for junction in junctions])
+
+        # adding edges
+        for junction1 in junctions:
+            for junction2 in junctions:
+                if junction1.index >= junction2.index:
+                    continue
+                distance = self.cached_air_distance_calculator.get_air_distance_between_junctions(junction1, junction2)
+                graph.add_edge(junction1.index, junction2.index, weight=distance)
+
+        mst = nx.minimum_spanning_tree(graph)
+
+        return mst.size(weight="weight")

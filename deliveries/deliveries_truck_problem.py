@@ -281,21 +281,30 @@ class DeliveriesTruckProblem(GraphProblem):
         This method returns a set of all deliveries that haven't been neither picked nor dropped yet.
         DONE [Ex.15]
         """
-        return set(self.problem_input.deliveries) - (set(state.dropped_deliveries) & set(state.loaded_deliveries))
+        return set(self.problem_input.deliveries) - (set(state.dropped_deliveries) | set(state.loaded_deliveries))
 
     def get_all_junctions_in_remaining_truck_path(self, state: DeliveriesTruckState) -> Set[Junction]:
         """
         This method returns a set of all junctions that are part of the remaining route of the truck.
         This includes the truck's current location, the pick locations of the deliveries that haven't
          been picked yet, and the drop location of the deliveries that haven't been dropped yet.
-        TODO [Ex.17]: Implement this method.
+        DONE [Ex.17]: Implement this method.
             Use `set` union operations.
             Use the method `self.get_deliveries_waiting_to_pick(state)`.
             Note: `set-comprehension` technique might be useful here. It works similar to the
                 `list-comprehension` technique. Example: {i * 10 for i in range(100)} would create
                 a set of the items {0, 10, 20, 30, ..., 990}
         """
-        raise NotImplementedError()  # TODO: remove this line!
+
+        deliveries_waiting_to_pick = self.get_deliveries_waiting_to_pick(state)
+
+        remaining_pick_locations = {delivery.pick_location for delivery in deliveries_waiting_to_pick}
+
+        remaining_deliveries_drop_locations = {delivery.drop_location for delivery in deliveries_waiting_to_pick}
+        current_deliveries_drop_locations = {delivery.drop_location for delivery in state.loaded_deliveries}
+        remaining_drop_locations = remaining_deliveries_drop_locations | current_deliveries_drop_locations
+
+        return remaining_pick_locations | remaining_drop_locations | {state.current_location}
 
 
 class TruckDeliveriesInnerMapProblemHeuristic(HeuristicFunction):
