@@ -227,7 +227,7 @@ class DeliveriesTruckProblem(GraphProblem):
 
     def _calc_map_road_cost(self, link: Link) -> DeliveryCost:
         """
-        TODO [Ex.27]: Modify the implementation of this method, so that for a given link (road), it would return
+        DONE [Ex.27]: Modify the implementation of this method, so that for a given link (road), it would return
                 the extended cost of this link. That is, the distance should remain as it is now, but both
                 the `time_cost` and the `money_cost` should be set appropriately.
             Use the `optimal_velocity` and the `gas_cost_per_meter` returned by the method
@@ -243,8 +243,9 @@ class DeliveriesTruckProblem(GraphProblem):
             optimization_objective=self.optimization_objective, max_driving_speed=link.max_speed)
         return DeliveryCost(
             distance_cost=link.distance,
-            time_cost=0,  # TODO: modify this value!
-            money_cost=0,  # TODO: modify this value!
+            time_cost=link.distance / optimal_velocity,
+            money_cost=link.distance * (gas_cost_per_meter +
+                                        link.is_toll_road * self.problem_input.toll_road_cost_per_meter),
             optimization_objective=self.optimization_objective)
 
     def get_zero_cost(self) -> Cost:
@@ -256,7 +257,7 @@ class DeliveriesTruckProblem(GraphProblem):
         Given a lower bound of the distance (in meters) that the truck has left to travel,
          this method returns an appropriate lower bound of the distance/time/money cost
          based on the problem's objective.
-        TODO [Ex.28]: We left only partial implementation of this method (just the trivial distance objective).
+        DONE [Ex.28]: We left only partial implementation of this method (just the trivial distance objective).
             Complete the implementation of this method!
             You might want to use constants like `MIN_ROAD_SPEED` or `MAX_ROAD_SPEED`.
             For the money cost, you would like to use the method `self._calc_map_road_cost()`. This
@@ -271,10 +272,18 @@ class DeliveriesTruckProblem(GraphProblem):
         if self.optimization_objective == OptimizationObjective.Distance:
             return total_distance_lower_bound
         elif self.optimization_objective == OptimizationObjective.Time:
-            raise NotImplementedError()  # TODO: remove this line and complete the implementation of this case!
+            # Given lower distance bound, lower time bound is always it divided by maximal speed
+            dummy_link = Link(distance=total_distance_lower_bound, max_speed=MAX_ROAD_SPEED,
+                              highway_type=0, is_toll_road=False, source=0, target=0)
+            return self._calc_map_road_cost(dummy_link).time_cost
         else:
             assert self.optimization_objective == OptimizationObjective.Money
-            raise NotImplementedError()  # TODO: remove this line and complete the implementation of this case!
+            # Given lower distance bound, lower money bound depends now only on using (or not) of toll roads
+            # and we still prefer to run on maximal speed - if optimal cruise speed of truck is smaller,
+            # then it will be selected.
+            dummy_link = Link(distance=total_distance_lower_bound, max_speed=MAX_ROAD_SPEED, is_toll_road=False,
+                              highway_type=0, source=0, target=0)
+            return self._calc_map_road_cost(dummy_link).money_cost
 
     def get_deliveries_waiting_to_pick(self, state: DeliveriesTruckState) -> Set[Delivery]:
         """

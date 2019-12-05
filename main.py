@@ -204,14 +204,18 @@ def multiple_objectives_deliveries_truck_problem_experiments():
     small_delivery_problem_with_money_cost = get_deliveries_problem('small', OptimizationObjective.Money)
 
     # Ex.29
-    # TODO: create an instance of `AStar` with the `TruckDeliveriesMSTAirDistHeuristic`,
+    # DONE: create an instance of `AStar` with the `TruckDeliveriesMSTAirDistHeuristic`,
     #       solve the `small_delivery_problem_with_time_cost` with it and print the results.
-    exit()  # TODO: remove!
+    a_star = AStar(TruckDeliveriesMSTAirDistHeuristic)
+    res = a_star.solve_problem(small_delivery_problem_with_time_cost)
+    print(res)
 
     # Ex.29
-    # TODO: create an instance of `AStar` with the `TruckDeliveriesMSTAirDistHeuristic`,
+    # DONE: create an instance of `AStar` with the `TruckDeliveriesMSTAirDistHeuristic`,
     #       solve the `small_delivery_problem_with_money_cost` with it and print the results.
-    exit()  # TODO: remove!
+    a_star = AStar(TruckDeliveriesMSTAirDistHeuristic)
+    res = a_star.solve_problem(small_delivery_problem_with_money_cost)
+    print(res)
 
 
 def deliveries_truck_problem_with_astar_epsilon_experiments():
@@ -234,11 +238,15 @@ def deliveries_truck_problem_with_astar_epsilon_experiments():
 
     # Ex.33
     # Try using A*eps to improve the speed (#dev) with a non-acceptable heuristic.
-    # TODO: create an instance of `AStarEpsilon` with the `TruckDeliveriesMSTAirDistHeuristic`,
+    # DONE: create an instance of `AStarEpsilon` with the `TruckDeliveriesMSTAirDistHeuristic`,
     #       solve the `moderate_delivery_problem_with_distance_cost` with it and print the results.
     #       use focal_epsilon=0.03, and  max_focal_size=40.
     #       use within_focal_priority_function=within_focal_h_sum_priority_function
-    exit()  # TODO: remove!
+    astar_eps = AStarEpsilon(heuristic_function_type=TruckDeliveriesMSTAirDistHeuristic,
+                             within_focal_priority_function=within_focal_h_sum_priority_function,
+                             focal_epsilon=0.03, max_focal_size=40)
+    res = astar_eps.solve_problem(moderate_delivery_problem_with_distance_cost)
+    print(res)
 
 
 def deliveries_truck_problem_anytime_astar_experiments():

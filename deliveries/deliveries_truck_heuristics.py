@@ -72,7 +72,7 @@ class TruckDeliveriesSumAirDistHeuristic(HeuristicFunction):
         The remaining distance estimation is the cost of this built path.
         Note that we ignore here the problem constraints (like picking before dropping and maximum number of packages
          on the truck). We only make sure to visit all junctions in `all_junctions_in_remaining_truck_path`.
-        TODO [Ex.20]:
+        DONE [Ex.20]:
             Complete the implementation of this method.
             Use `self.cached_air_distance_calculator.get_air_distance_between_junctions()` for air
              distance calculations.
@@ -127,7 +127,7 @@ class TruckDeliveriesMSTAirDistHeuristic(HeuristicFunction):
 
     def _calculate_junctions_mst_weight_using_air_distance(self, junctions: Set[Junction]) -> float:
         """
-        TODO [Ex.23]: Implement this method.
+        DONE [Ex.23]: Implement this method.
               Use `networkx` (nx) package (already imported in this file) to calculate the weight
                of the minimum-spanning-tree of the graph in which the vertices are the given junctions
                and there is an edge between each pair of distinct junctions (no self-loops) for which
